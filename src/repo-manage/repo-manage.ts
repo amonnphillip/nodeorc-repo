@@ -34,9 +34,9 @@ export class ReopManage {
     this.repo = await Git.Repository.init(this.repositoryPath, 0);
     const index = await this.repo.refreshIndex();
     const oidResult = await index.writeTree();
-    const author = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
-    const commiter = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
-    await this.repo.createCommit('HEAD', author, commiter, 'auto commit', oidResult, []);
+    const author = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    const committer = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    await this.repo.createCommit('HEAD', author, committer, 'auto commit', oidResult, []);
   }
   async getFile(fileNameAndPath): Promise<any> {
     assert(this.repo);
@@ -56,14 +56,6 @@ export class ReopManage {
       }
     });
   }
-  async getFileOfCommit(fileNameAndPath): Promise<any> {
-    assert(this.repo);
-
-    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
-    return new Promise((resolve, reject) => {
-
-    });
-  }
   async addFile(fileNameAndPath, fileBlob): Promise<any> {
     assert(this.repo);
 
@@ -75,9 +67,8 @@ export class ReopManage {
     const oidResult = await index.writeTree();
     const head = await Git.Reference.nameToId(this.repo, 'HEAD');
     const parent = await this.repo.getCommit(head);
-    const author = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
-    const commiter = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
-    const commitId = await this.repo.createCommit('HEAD', author, commiter, 'auto commit', oidResult, [parent]);
-    return commitId;
+    const author = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    const committer = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    return await this.repo.createCommit('HEAD', author, committer, 'nodeorc auto commit', oidResult, [parent]);
   }
 }

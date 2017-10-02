@@ -8,6 +8,8 @@ export class ConfigObject {
     readonly publicKeyName: string,
   };
   public readonly  git: {
+    readonly author: string,
+    readonly email: string,
     readonly repositoryPath: string,
   }
 }

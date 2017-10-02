@@ -9,6 +9,8 @@
     "publicKeyName": "public.pem"
   },
   "git": {
+    "author": "NodeGit",
+    "email": "somethiing@something.com",
     "repositoryPath": "nodeorcrepo"
   }
 }
