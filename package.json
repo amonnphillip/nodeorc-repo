@@ -1,0 +1,32 @@
+{
+  "name": "nodeorc-repo",
+  "version": "1.0.0",
+  "description": "A demonstration of how to use typescript with nodejs",
+  "main": "server.ts",
+  "scripts": {
+    "start": "ts-node ./src/index.ts",
+    "test": "mocha --compilers ts:ts-node/register,tsx:ts-node/register ./src/**/*spec.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.0.1",
+    "@types/mocha": "^2.2.41",
+    "@types/node": "^8.0.14",
+    "chai": "^4.1.0",
+    "eslint": "^4.3.0",
+    "eslint-plugin-typescript": "^0.3.0",
+    "mocha": "^3.4.2",
+    "mocha-typescript": "^1.1.7",
+    "nyc": "^11.0.3",
+    "source-map-support": "^0.4.15",
+    "ts-node": "^3.2.1",
+    "typescript-eslint-parser": "^4.0.0",
+    "tslint": "^5.5.0",
+    "typescript": "^2.4.2"
+  },
+  "dependencies": {
+    "crypto2": "^0.3.2",
+    "nodegit": "^0.20.2"
+  }
+}

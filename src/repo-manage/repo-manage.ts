@@ -1,0 +1,83 @@
+import { Config } from '../config/config';
+import * as Git from 'nodegit';
+import * as path from 'path';
+import * as assert from 'assert';
+import * as fs from 'fs-extra';
+
+export class ReopManage {
+  private repositoryPath: string;
+  private repo: any;
+  constructor(private config: Config) {
+    this.repositoryPath = path.resolve(this.config.configSettings.path + this.config.configSettings.git.repositoryPath);
+    this.repo = null;
+  }
+  async checkRepoExsist(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const repo = Git.Repository.open(this.repositoryPath).then(() => {
+        resolve(true);
+      }).catch(() => {
+        resolve(false);
+      });
+    });
+  }
+  async openRepo(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      Git.Repository.open(this.repositoryPath).then((repo) => {
+        this.repo = repo;
+        resolve();
+      }).catch(() => {
+        reject();
+      });
+    });
+  }
+  async createRepo(): Promise<any> {
+    this.repo = await Git.Repository.init(this.repositoryPath, 0);
+    const index = await this.repo.refreshIndex();
+    const oidResult = await index.writeTree();
+    const author = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
+    const commiter = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
+    await this.repo.createCommit('HEAD', author, commiter, 'auto commit', oidResult, []);
+  }
+  async getFile(fileNameAndPath): Promise<any> {
+    assert(this.repo);
+
+    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
+    return new Promise((resolve, reject) => {
+      if (fs.existsSync(resolvedFileName)) {
+        fs.readFile(resolvedFileName, (err, data) => {
+          if (err === null) {
+            resolve(data);
+          } else {
+            reject('Error reading file');
+          }
+        });
+      } else {
+        reject('File does not exist');
+      }
+    });
+  }
+  async getFileOfCommit(fileNameAndPath): Promise<any> {
+    assert(this.repo);
+
+    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
+    return new Promise((resolve, reject) => {
+
+    });
+  }
+  async addFile(fileNameAndPath, fileBlob): Promise<any> {
+    assert(this.repo);
+
+    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
+    await fs.writeFile(resolvedFileName, fileBlob);
+    const index = await this.repo.refreshIndex();
+    await index.addByPath(fileNameAndPath);
+    await index.write();
+    const oidResult = await index.writeTree();
+    const head = await Git.Reference.nameToId(this.repo, 'HEAD');
+    const parent = await this.repo.getCommit(head);
+    const author = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
+    const commiter = await Git.Signature.now('NodeGit', 'someone@nodegit.com');
+    const commitId = await this.repo.createCommit('HEAD', author, commiter, 'auto commit', oidResult, [parent]);
+    return commitId;
+  }
+}

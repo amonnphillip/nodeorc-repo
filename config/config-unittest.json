@@ -1,0 +1,14 @@
+{
+  "path": "../nodeorc-repo-test/",
+  "server": {
+    "port": 4001
+  },
+  "key": {
+    "generateKeys": true,
+    "privateKeyName": "private.pem",
+    "publicKeyName": "public.pem"
+  },
+  "git": {
+    "repositoryPath": "nodeorcrepo"
+  }
+}
