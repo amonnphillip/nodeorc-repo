@@ -5,7 +5,6 @@ import * as path from 'path';
 
 export class Keys {
   constructor(private config: Config) {
-    console.log();
   }
   checkKeys(): boolean {
     const privatePath = path.resolve(this.config.configSettings.path + this.config.configSettings.key.privateKeyName);
