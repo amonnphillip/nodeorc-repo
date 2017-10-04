@@ -1,5 +1,5 @@
 import chai = require('chai');
-import { ReopManage } from './repo-manage';
+import { RepoManage } from './repo-manage';
 import { Config } from '../config/config';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -20,7 +20,7 @@ const deleteRepo = async () => {
 
 describe('ReopManage tests', () => {
   it('Should be able to initialise a ReopManage object', () => {
-    const reopManage = new ReopManage(config);
+    const repoManage = new RepoManage(config);
   });
 
   describe('Test repository creation features', () => {
@@ -33,8 +33,8 @@ describe('ReopManage tests', () => {
 
     it('Should be able to check if a repository is not present', async () => {
       await deleteRepo();
-      const reopManage = new ReopManage(config);
-      await reopManage.checkRepoExsist().then((ret) => {
+      const repoManage = new RepoManage(config);
+      await repoManage.checkRepoExsist().then((ret) => {
         expect(ret).to.equal(false);
       }).catch((err) => {
         throw new Error(err);
@@ -43,9 +43,19 @@ describe('ReopManage tests', () => {
 
     it('Should be able to create a repository', async () => {
       await deleteRepo();
-      const reopManage = new ReopManage(config);
-      await reopManage.createRepo().then(() => {
+      const repoManage = new RepoManage(config);
+      await repoManage.createRepo().then(() => {
         // Nothing to do here
+      }).catch((err) => {
+        throw Error(err);
+      });
+    });
+
+    it('Should be able to get a valid repository path', async () => {
+      await deleteRepo();
+      const repoManage = new RepoManage(config);
+      await repoManage.createRepo().then(() => {
+        expect(repoManage.repositoryPath).to.exist;
       }).catch((err) => {
         throw Error(err);
       });
@@ -53,9 +63,9 @@ describe('ReopManage tests', () => {
 
     it('Should be able to open a repository', async () => {
       await deleteRepo();
-      const reopManage = new ReopManage(config);
-      await reopManage.createRepo().then((ret) => {
-        return reopManage.openRepo();
+      const repoManage = new RepoManage(config);
+      await repoManage.createRepo().then((ret) => {
+        return repoManage.openRepo();
       }).then(() => {
         // Nothing to do here
       }).catch((err) => {
@@ -66,9 +76,9 @@ describe('ReopManage tests', () => {
 
   describe('Test repository file features', () => {
     before(async () => {
-      const reopManage = new ReopManage(config);
-      if (!await reopManage.checkRepoExsist()) {
-        await reopManage.createRepo();
+      const repoManage = new RepoManage(config);
+      if (!await repoManage.checkRepoExsist()) {
+        await repoManage.createRepo();
       }
     });
 
@@ -79,18 +89,33 @@ describe('ReopManage tests', () => {
     it('Should be able to add a file to the repo', async () => {
       const fileBlob = await fs.readFileSync('./test/testfile.txt');
 
-      const reopManage = new ReopManage(config);
-      await reopManage.openRepo();
-      const commitId = await reopManage.addFile('testfile.txt', fileBlob);
+      const repoManage = new RepoManage(config);
+      await repoManage.openRepo();
+      const commitId = await repoManage.addFile('testfile.txt', fileBlob);
       expect(commitId).to.exist;
       expect(commitId.toString().length).to.be.greaterThan(1);
     });
 
-    it('Should be able to get a file from the repo', async () => {
-      const reopManage = new ReopManage(config);
-      await reopManage.openRepo();
+    it('Should be able to check if a file exists in a repo', async () => {
+      const fileBlob = await fs.readFileSync('./test/testfile.txt');
 
-      const fileBlob = await reopManage.getFile('testfile.txt');
+      const repoManage = new RepoManage(config);
+      await repoManage.openRepo();
+      const commitId = await repoManage.addFile('testfile.txt', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+
+      let fileExsists = await repoManage.fileExist('testfile.txt');
+      expect(fileExsists).to.equal(true);
+      fileExsists = await repoManage.fileExist('testfile_does_not_exist.txt');
+      expect(fileExsists).to.equal(false);
+    });
+
+    it('Should be able to get a file from the repo', async () => {
+      const repoManage = new RepoManage(config);
+      await repoManage.openRepo();
+
+      const fileBlob = await repoManage.getFile('testfile.txt');
       expect(fileBlob).to.exist;
       expect(fileBlob.length).to.equal(15);
     });

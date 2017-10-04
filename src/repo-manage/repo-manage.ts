@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 
-export class ReopManage {
-  private repositoryPath: string;
+export class RepoManage {
+  readonly repositoryPath: string;
   private repo: any;
   constructor(private config: Config) {
     this.repositoryPath = path.resolve(this.config.configSettings.path + this.config.configSettings.git.repositoryPath);
@@ -70,5 +70,13 @@ export class ReopManage {
     const author = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
     const committer = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
     return await this.repo.createCommit('HEAD', author, committer, 'nodeorc auto commit', oidResult, [parent]);
+  }
+  async fileExist(fileNameAndPath): Promise<boolean|{}> {
+    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
+    return new Promise((resolve, reject) => {
+      fs.exists(resolvedFileName, (exists) => {
+        resolve(exists);
+      });
+    });
   }
 }
