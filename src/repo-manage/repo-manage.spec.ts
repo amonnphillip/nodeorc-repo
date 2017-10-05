@@ -111,6 +111,49 @@ describe('ReopManage tests', () => {
       expect(fileExsists).to.equal(false);
     });
 
+    it('Should be able to do a file search in the repo', async () => {
+      const fileBlob = await fs.readFileSync('./test/testfile.txt');
+
+      const repoManage = new RepoManage(config);
+      await repoManage.openRepo();
+      let commitId = await repoManage.addFile('testfile.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('testfile.aci.asc', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('testfile2.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('testfile2.aci.asc', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('./somedir/testfile2.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('./somedir/testfile2.aci.asc', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('zztestfile3.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('zztestfile3.aci.asc', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+
+      let files = await repoManage.findFiles('**/testfile*.aci');
+      expect(files.length).to.equal(3);
+
+      files = await repoManage.findFiles('**/testfile*.aci.asc');
+      expect(files.length).to.equal(3);
+
+      files = await repoManage.findFiles('**/somedir/testfile2.aci');
+      expect(files.length).to.equal(1);
+
+      files = await repoManage.findFiles('testfile_does_not_exist');
+      expect(files.length).to.equal(0);
+    });
+
     it('Should be able to get a file from the repo', async () => {
       const repoManage = new RepoManage(config);
       await repoManage.openRepo();

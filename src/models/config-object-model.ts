@@ -3,6 +3,9 @@ export class ConfigObject {
   public readonly server: {
     readonly port: string,
   };
+  public readonly metaData: {
+    readonly registryUrl: string,
+  };
   public readonly key: {
     readonly privateKeyName: string,
     readonly publicKeyName: string,
@@ -11,5 +14,5 @@ export class ConfigObject {
     readonly author: string,
     readonly email: string,
     readonly repositoryPath: string,
-  }
+  };
 }

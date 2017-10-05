@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="ac-discovery" content="localhost/example http://localhost/somedir/somedir2/{name}-{version}-{os}-{arch}.{ext}">
+    <meta name="ac-discovery-pubkeys" content="localhost/example http://localhost/pubkey.gpg">
+</head>
+</html>

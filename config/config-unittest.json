@@ -1,8 +1,10 @@
 {
   "path": "../nodeorc-repo-test/",
   "server": {
-    "url": "localhost",
     "port": 4001
+  },
+  "metaData": {
+    "registryUrl": "http://localhost"
   },
   "key": {
     "generateKeys": true,

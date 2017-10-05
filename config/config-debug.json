@@ -3,6 +3,9 @@
   "server": {
     "port": 4001
   },
+  "metaData": {
+    "registryUrl": "http://localhost"
+  },
   "key": {
     "generateKeys": true,
     "privateKeyName": "private.pem",
