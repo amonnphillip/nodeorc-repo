@@ -1,6 +1,8 @@
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as helmet from 'helmet';
+import * as cors from 'cors';
+import * as  fileUpload from 'express-fileupload';
 import { URL } from 'url';
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -24,6 +26,11 @@ export class Serve {
 
     return new Promise((resolve, reject) => {
       this.app.use(express.static(this.repoManage.repositoryPath));
+      const corsOptions = {
+        origin: ['http://localhost:4001', 'http://localhost:4200'],
+      };
+      this.app.use(cors(corsOptions));
+      this.app.use(fileUpload());
       this.app.use(helmet()); // TODO: THIS TOOL IS SUPPOSED TO BE USED INTERNALLY ONLY? IF SO WE DO NOT NEED THIS??
       this.app.use(bodyParser.json());
       this.app.use(bodyParser.urlencoded({
@@ -31,6 +38,39 @@ export class Serve {
       }));
       this.app.get('/', (req, res) => {
         res.send('Hello from NodeOrc repo!');
+      });
+      this.app.get('/uploadui', async (req, res) => {
+        const html = await readFile(path.resolve('./html/uploadui.html'), 'utf8');
+
+        res.type('html');
+        res.send(html);
+        res.status(200).end();
+      });
+      this.app.post('/fileexists', async (req, res) => {
+        // TODO: VALIDATE FILE NAME
+
+        const files = await this.repoManage.findFiles('**/' + req.body.fileName);
+        if (files &&
+          files.length > 0) {
+          res.status(200).end();
+        } else {
+          res.status(404).end();
+        }
+      });
+      this.app.post('/uploadfile', async (req, res) => {
+        // TODO: SECURE THIS API!
+
+        if (req.files) {
+          // TODO: VALIDATE FILE NAME, LENGTH AND LOCATION
+
+          try {
+            const commitId = this.repoManage.addFile( 'images/' + req.files.imagefile.name, req.files.imagefile.data);
+          } catch (err) {
+            res.status(500).end();
+          }
+        } else {
+          res.status(400).end();
+        }
       });
       this.app.get('/:requestName', async (req, res) => {
         if (req.query['ac-discovery'] === 1 ) {

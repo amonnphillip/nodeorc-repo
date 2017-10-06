@@ -26,8 +26,10 @@
     "typescript": "^2.4.2"
   },
   "dependencies": {
+    "cors": "^2.8.4",
     "crypto2": "^0.3.2",
     "express": "^4.16.1",
+    "express-fileupload": "^0.2.0",
     "gpg": "^0.6.0",
     "helmet": "^3.8.2",
     "is-match": "^1.0.0",

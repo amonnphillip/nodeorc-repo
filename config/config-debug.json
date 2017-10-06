@@ -15,5 +15,8 @@
     "author": "NodeGit",
     "email": "somethiing@something.com",
     "repositoryPath": "nodeorcrepo"
+  },
+  "ui": {
+
   }
 }
