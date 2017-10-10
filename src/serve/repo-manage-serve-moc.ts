@@ -1,5 +1,6 @@
 import { Config } from '../config/config';
 import { IRepoManageInterface } from '../repo-manage/repo-manage';
+import { RepoFileCommitModel } from '../models/repo-file-commit-model';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
@@ -62,5 +63,8 @@ export class RepoManageMoc implements IRepoManageInterface {
         }
       });
     });
+  }
+  async getMostRecentFileCommits(): Promise<RepoFileCommitModel[]> {
+    return [];
   }
 }

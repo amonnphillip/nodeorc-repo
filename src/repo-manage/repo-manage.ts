@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as recursive from 'recursive-readdir';
 import * as matcher from 'is-match';
+import { RepoFileCommitModel } from '../models/repo-file-commit-model';
 
 export interface IRepoManageInterface {
   readonly repositoryPath: string;
@@ -15,6 +16,7 @@ export interface IRepoManageInterface {
   addFile(fileNameAndPath, fileBlob): Promise<any>;
   fileExist(fileNameAndPath): Promise<boolean|{}>;
   findFiles(fileGlobPattern): Promise<string[]|any>;
+  getMostRecentFileCommits(): Promise<RepoFileCommitModel[]>;
 }
 
 export class RepoManage implements IRepoManageInterface {
@@ -94,7 +96,8 @@ export class RepoManage implements IRepoManageInterface {
     const parent = await this.repo.getCommit(head);
     const author = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
     const committer = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
-    return await this.repo.createCommit('HEAD', author, committer, RepoManage.gitCommitMessage, oidResult, [parent]);
+    return await this.repo.createCommit('HEAD', author, committer,
+      RepoManage.gitCommitMessage + ' ' + path.parse(resolvedFileName).base, oidResult, [parent]);
   }
   async fileExist(fileNameAndPath): Promise<boolean|{}> {
     assert(this.repo);
@@ -131,5 +134,69 @@ export class RepoManage implements IRepoManageInterface {
         }
       });
     });
+  }
+  async getMostRecentFileCommits(): Promise<RepoFileCommitModel[]> {
+    assert(this.repo);
+
+    const containerEntries = [];
+
+    const masterCommit = await this.repo.getMasterCommit();
+    const index = await this.repo.refreshIndex();
+    const entries = await index.entries();
+
+    const walker = this.repo.createRevWalk();
+    walker.push(masterCommit.sha());
+    walker.sorting(Git.Revwalk.SORT.Time);
+
+    const entriesToGetHistoryFor = [];
+    const remainingEntries = [];
+    for (const ent of entries) {
+      if (ent.path.endsWith('.aci')) {
+        entriesToGetHistoryFor.push(ent);
+        remainingEntries.push(ent.path);
+      }
+    }
+
+    let done = false;
+    do {
+      const oid = await walker.next();
+      if (oid) {
+        const commit = await walker.repo.getCommit(oid);
+        const diffs = await commit.getDiff();
+        for (const dif of diffs) {
+          const patches = await dif.patches();
+          for (const patch of patches) {
+            const file = patch.newFile().path();
+            for (const ent of remainingEntries) {
+              const foundIndex = remainingEntries.indexOf(file);
+              if (foundIndex > -1) {
+                containerEntries.push(new RepoFileCommitModel({
+                  path: file,
+                  committer: commit.committer().name(),
+                  date: commit.date().toString(),
+                  message: commit.message(),
+                  added: patch.isAdded(),
+                  modified: patch.isModified(),
+                  hash: commit.sha(),
+                }));
+                remainingEntries.splice(foundIndex, 1);
+                break;
+              }
+            }
+          }
+        }
+      } else {
+        done = true;
+      }
+
+      if (remainingEntries.length === 0) {
+        done = true;
+      }
+    } while (!done);
+
+    return containerEntries;
+  }
+  async getRepoState(): Promise<any> {
+
   }
 }

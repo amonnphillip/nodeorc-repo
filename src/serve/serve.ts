@@ -57,6 +57,15 @@ export class Serve {
           res.status(404).end();
         }
       });
+      this.app.post('/state', async (req, res) => {
+        try {
+          const recientFileCommits = await this.repoManage.getMostRecentFileCommits();
+          res.send(recientFileCommits);
+          res.status(200).end();
+        } catch (err) {
+          res.status(500).end();
+        }
+      });
       this.app.post('/uploadfile', async (req, res) => {
         // TODO: SECURE THIS API!
 
@@ -65,6 +74,7 @@ export class Serve {
 
           try {
             const commitId = this.repoManage.addFile( 'images/' + req.files.imagefile.name, req.files.imagefile.data);
+            res.status(200).end();
           } catch (err) {
             res.status(500).end();
           }

@@ -162,5 +162,27 @@ describe('ReopManage tests', () => {
       expect(fileBlob).to.exist;
       expect(fileBlob.length).to.equal(15);
     });
+
+    it('Should be able to get file entries from the repo', async () => {
+      const repoManage = new RepoManage(config);
+      await repoManage.openRepo();
+
+      const fileBlob = await fs.readFileSync('./test/testfile.txt');
+      let commitId = await repoManage.addFile('testfile.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('testfile2.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+      commitId = await repoManage.addFile('testfile3.aci', fileBlob);
+      expect(commitId).to.exist;
+      expect(commitId.toString().length).to.be.greaterThan(1);
+
+      const recientFileCommits = await repoManage.getMostRecentFileCommits();
+      expect(recientFileCommits.length).to.equal(3);
+      expect(recientFileCommits[0].path).to.equal('testfile3.aci');
+      expect(recientFileCommits[1].path).to.equal('testfile2.aci');
+      expect(recientFileCommits[2].path).to.equal('testfile.aci');
+    });
   });
 });
