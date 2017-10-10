@@ -1,10 +1,13 @@
 {
   "path": "../nodeorc-repo-debug/",
   "server": {
-    "port": 4001
+    "protocol": "https",
+    "port": 4443,
+    "key": "../keys/server-key.pem",
+    "cert": "../keys/server-crt.pem"
   },
   "metaData": {
-    "registryUrl": "http://localhost"
+    "protocol": "https"
   },
   "key": {
     "generateKeys": true,

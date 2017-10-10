@@ -10,6 +10,8 @@ import * as util from 'util';
 import { Config } from '../config/config';
 import { IRepoManageInterface } from '../repo-manage/repo-manage';
 import { MetadataResponse, MetadataResponseError } from '../models/metadata-response-model';
+import * as  https from 'https';
+import * as  http from 'http';
 
 const readFile = util.promisify(fs.readFile);
 
@@ -27,7 +29,7 @@ export class Serve {
     return new Promise((resolve, reject) => {
       this.app.use(express.static(this.repoManage.repositoryPath));
       const corsOptions = {
-        origin: ['http://localhost:4001', 'http://localhost:4200'],
+        origin: ['https://localhost:4001', 'https://localhost:4200'], // TODO: THIS SHOULD COME FROM A CONFIG
       };
       this.app.use(cors(corsOptions));
       this.app.use(fileUpload());
@@ -83,9 +85,10 @@ export class Serve {
         }
       });
       this.app.get('/:requestName', async (req, res) => {
-        if (req.query['ac-discovery'] === 1 ) {
+        if (req.query['ac-discovery'] &&
+          parseInt(req.query['ac-discovery'], 10) === 1) {
           // AC discovery request
-          const metadataResponse = await this.createMeta(req.params.requestName);
+          const metadataResponse = await this.createMeta(req.params.requestName, req.protocol, req.headers.host);
           switch (metadataResponse.error) {
             case MetadataResponseError.NoError:
               res.type('html');
@@ -119,14 +122,31 @@ export class Serve {
           res.status(404).end();
         }
       });
-      this.app.listen(this.config.configSettings.server.port, () => {
-        resolve();
-      }).on('error', (err) => {
-        reject(err);
-      });
+
+      if (this.config.configSettings.server.protocol === 'https') {
+        const privateKey  = fs.readFileSync(this.config.configSettings.server.key, 'utf8');
+        const certificate = fs.readFileSync(this.config.configSettings.server.cert, 'utf8');
+        const httpsOptions = {
+          key: privateKey,
+          cert: certificate,
+        };
+
+        https.createServer(httpsOptions, this.app).listen(this.config.configSettings.server.port, () => {
+          resolve();
+        }).on('error', (err) => {
+          reject(err);
+        });
+      } else {
+        http.createServer(this.app).listen(this.config.configSettings.server.port, () => {
+          resolve();
+        }).on('error', (err) => {
+          reject(err);
+        });
+      }
+
     });
   }
-  async createMeta(imageName): Promise<MetadataResponse> {
+  async createMeta(imageName, protocol, host): Promise<MetadataResponse> {
     // TODO: FOR SECURITY CHECK THE LENGTH OF THE IMAGE NAME
 
     try {
@@ -137,7 +157,7 @@ export class Serve {
 
         // Images found so process a valid metadata response
         let html = await readFile(path.resolve('./html/metadiscovery.html'), 'utf8');
-        const url = new URL(this.config.configSettings.metaData.registryUrl + '/');
+        const url = new URL(protocol + '://' + host + '/');
 
         let imagePath = path.parse(files[0]).dir.replace(this.repoManage.repositoryPath, '');
         imagePath = imagePath.replace(new RegExp(/\\/, 'g'), '/');
