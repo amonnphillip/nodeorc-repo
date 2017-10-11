@@ -12,12 +12,16 @@ import { IRepoManageInterface } from '../repo-manage/repo-manage';
 import { MetadataResponse, MetadataResponseError } from '../models/metadata-response-model';
 import * as  https from 'https';
 import * as  http from 'http';
+import { Gpg } from '../gpg/gpg';
 
 const readFile = util.promisify(fs.readFile);
 
 export class Serve {
   private app: any;
-  constructor(private config: Config, private repoManage: IRepoManageInterface) {
+  constructor(
+    private config: Config,
+    private repoManage: IRepoManageInterface,
+    private gpg: Gpg) {
     this.app = express();
   }
   async start(): Promise<any> {
@@ -75,7 +79,9 @@ export class Serve {
           // TODO: VALIDATE FILE NAME, LENGTH AND LOCATION
 
           try {
-            const commitId = this.repoManage.addFile( 'images/' + req.files.imagefile.name, req.files.imagefile.data);
+            let commitId = await this.repoManage.addFile( 'images/' + req.files.imagefile.name, req.files.imagefile.data);
+            await this.gpg.signImage(path.resolve(this.repoManage.repositoryPath + '/images/'), req.files.imagefile.name);
+            commitId = await this.repoManage.addExistingFile( 'images/' + req.files.imagefile.name + '.asc');
             res.status(200).end();
           } catch (err) {
             res.status(500).end();

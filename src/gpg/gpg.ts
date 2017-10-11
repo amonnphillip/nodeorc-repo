@@ -17,6 +17,19 @@ export class Gpg {
     const key = await this.execGpg(['--batch', '--generate-key', file], this.destinationPath);
     return key;
   }
+  async signImage(imagePath, imageName) {
+    await this.execGpg(
+      ['--homedir',
+        'E:/gpg',
+        '--passphrase',
+        'abc',
+        '--yes',
+        '--output',
+        path.resolve(imagePath + '/' + imageName + '.asc'),
+        '--detach-sig',
+        path.resolve(imagePath + '/' + imageName)],
+        path.resolve(imagePath));
+  }
   async execGpg(args: string[], destinationPath: string): Promise<any> {
     const options = {
       cwd: destinationPath,

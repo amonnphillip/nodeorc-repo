@@ -1,8 +1,8 @@
 {
   "path": "../nodeorc-repo-debug/",
   "server": {
-    "protocol": "https",
-    "port": 4443,
+    "protocol": "http",
+    "port": 4001,
     "key": "../keys/server-key.pem",
     "cert": "../keys/server-crt.pem"
   },

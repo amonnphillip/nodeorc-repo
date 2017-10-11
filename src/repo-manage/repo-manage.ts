@@ -14,6 +14,7 @@ export interface IRepoManageInterface {
   createRepo(): Promise<any>;
   getFile(fileNameAndPath): Promise<any>;
   addFile(fileNameAndPath, fileBlob): Promise<any>;
+  addExistingFile(fileNameAndPath): Promise<any>;
   fileExist(fileNameAndPath): Promise<boolean|{}>;
   findFiles(fileGlobPattern): Promise<string[]|any>;
   getMostRecentFileCommits(): Promise<RepoFileCommitModel[]>;
@@ -88,6 +89,26 @@ export class RepoManage implements IRepoManageInterface {
 
     // Add file to git repo
     await fs.writeFile(resolvedFileName, fileBlob);
+    const index = await this.repo.refreshIndex();
+    await index.addByPath(cleanedUpFileNameAndPath);
+    await index.write();
+    const oidResult = await index.writeTree();
+    const head = await Git.Reference.nameToId(this.repo, 'HEAD');
+    const parent = await this.repo.getCommit(head);
+    const author = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    const committer = await Git.Signature.now(this.config.configSettings.git.author, this.config.configSettings.git.email);
+    return await this.repo.createCommit('HEAD', author, committer,
+      RepoManage.gitCommitMessage + ' ' + path.parse(resolvedFileName).base, oidResult, [parent]);
+  }
+  async addExistingFile(fileNameAndPath): Promise<any> {
+    assert(this.repo);
+
+    // Clean up relative path for file because nodeGit it picky
+    const resolvedFileName = path.resolve(this.repositoryPath + '/' + fileNameAndPath);
+    let cleanedUpFileNameAndPath = path.relative(this.repositoryPath, resolvedFileName);
+    cleanedUpFileNameAndPath = cleanedUpFileNameAndPath.split('\\').join('/');
+
+    // Add file to git repo
     const index = await this.repo.refreshIndex();
     await index.addByPath(cleanedUpFileNameAndPath);
     await index.write();

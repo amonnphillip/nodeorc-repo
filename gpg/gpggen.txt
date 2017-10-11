@@ -2,11 +2,9 @@ Key-Type: RSA
 Key-Length: 2048
 Subkey-Type: RSA
 Subkey-Length: 2048
-Name-Real: NodeOrc
-Name-Comment: NodeOrc repo aci key
-Name-Email: nodeorc@nodeorc.com
+Name-Real: nodeorc
+Name-Comment: nodeorc repo aci key
+Name-Email: you@youremail.com
 Expire-Date: 0
 Passphrase: abc
-%pubring rkt.pub
-%secring rkt.sec
 %commit

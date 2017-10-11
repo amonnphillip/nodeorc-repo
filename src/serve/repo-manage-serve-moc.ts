@@ -34,6 +34,11 @@ export class RepoManageMoc implements IRepoManageInterface {
       resolve();
     });
   }
+  addExistingFile(fileNameAndPath): Promise<any> {
+    return new Promise((resolve, reject) => {
+      resolve();
+    });
+  }
   fileExist(fileNameAndPath): Promise<boolean|{}> {
     return new Promise((resolve, reject) => {
       resolve();
