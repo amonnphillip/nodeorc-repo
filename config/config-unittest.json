@@ -12,7 +12,13 @@
   "key": {
     "generateKeys": true,
     "privateKeyName": "private.pem",
-    "publicKeyName": "public.pem"
+    "publicKeyName": "public.pem",
+    "keyConfig": {
+      "name": "someone",
+      "comment": "some comment",
+      "email": "joe@foo.bar",
+      "passphrase": "abc"
+    }
   },
   "git": {
     "author": "NodeGit",

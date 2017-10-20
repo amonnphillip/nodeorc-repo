@@ -2,3 +2,8 @@
 /.idea
 /npm-debug.log
 /dist
+/gpgme/gpgme-master
+/gpgme/libassuan-master
+/gpgme/libgpg-error-master
+/gpgme/build
+/gpgme/.vscode

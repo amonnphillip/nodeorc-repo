@@ -1,0 +1,9 @@
+<GnupgKeyParms format="internal">
+Key-Type: default
+Subkey-Type: default
+Name-Real: %name%
+Name-Comment: %comment%
+Name-Email: %email%
+Expire-Date: 0
+Passphrase: %passphrase%
+</GnupgKeyParms>
