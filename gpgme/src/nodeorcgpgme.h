@@ -28,7 +28,7 @@ class Gpgme : public ObjectWrap {
 
   static NAN_METHOD(New);
   // static NAN_METHOD(toString);
-  // static NAN_METHOD(importKey);
+  static NAN_METHOD(CreateDetachedSignature);
   static NAN_METHOD(ListKeys);
   static NAN_METHOD(ExportKey);
   static NAN_METHOD(DeleteKey);

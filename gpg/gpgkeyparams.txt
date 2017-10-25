@@ -1,6 +1,8 @@
 <GnupgKeyParms format="internal">
-Key-Type: default
-Subkey-Type: default
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
 Name-Real: %name%
 Name-Comment: %comment%
 Name-Email: %email%

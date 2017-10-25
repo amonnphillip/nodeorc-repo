@@ -6,6 +6,8 @@ THIS IS A WORK IN PROGRESS!
 
 Set up:
 
+Right now the version of gpg you need is not installed on linux images by default.
+
 Download and install GPG for the operating system you are using:
 https://gnupg.org/download/
 Then reboot your machine
@@ -17,6 +19,13 @@ Edit the config for the service.
 Start the service, it will create the git repo. Now place the public key in the git repo that was created and commit. 
 
 You can upload container images via the service UI at the ur;
+
+killall gpg-agent
+vim ~/.gnupg/gpg-agent.conf
+# add: allow-loopback-pinentry
+gpg-connect-agent reloadagent /bye
+
+sudo apt-get install gnupg2
 
 You need the gpgme >= 1.10.0 in order for the addon to compile.
 

@@ -49,7 +49,7 @@ export class Gpg {
     });
   }
   async createKeys() {
-    if (await this.keyExist()) {
+    if (!await this.keyExist()) {
       return new Promise((resolve, reject) => {
         this.gpgmeInstance.generateKeys(this.generateKeyParams(), (result) => {
           if (typeof result === 'object') {
@@ -90,8 +90,22 @@ export class Gpg {
 
     return Promise.resolve(false);
   }
-  async generateSignature(imagePath, imageName) {
+  async signDetached(imageFileName, signatureFileName) {
+    const key = await this.getOldestKey();
+    if (typeof key !== 'undefined') {
+      return new Promise((resolve, reject) => {
+        this.gpgmeInstance.createDetachedSignature(key.fingerprint, 'abc', imageFileName, signatureFileName, (result) => {
+          if (typeof result === 'string' &&
+            result.length > 0) {
+            resolve(true);
+          } else {
+            reject(false);
+          }
+        });
+      });
+    }
 
+    return Promise.resolve(false);
   }
   async getOldestKey(): Promise<any> {
     const keys = await this.listKeys();
