@@ -3,8 +3,8 @@
         {
             "target_name": "gpgme",
             "sources": [
-                "src/nodeorcgpgme.cc",
-                "src/gpgmeasyncworker.cc"],
+                "src/nodeorcgpgme.cc"
+            ],
             "include_dirs": [
                 "<!(node -e \"require('nan')\")",
                 "<!@(gpgme-config --cflags | sed 's/-I//g')"

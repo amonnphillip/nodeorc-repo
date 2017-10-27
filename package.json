@@ -21,9 +21,10 @@
     "nyc": "^11.0.3",
     "source-map-support": "^0.4.15",
     "ts-node": "^3.2.1",
-    "typescript-eslint-parser": "^4.0.0",
     "tslint": "^5.5.0",
-    "typescript": "^2.4.2"
+    "tslint-no-unused-expression-chai": "0.0.3",
+    "typescript": "^2.4.2",
+    "typescript-eslint-parser": "^4.0.0"
   },
   "dependencies": {
     "cors": "^2.8.4",

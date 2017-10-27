@@ -14,10 +14,11 @@
     "privateKeyName": "private.pem",
     "publicKeyName": "public.pem",
     "keyConfig": {
-      "name": "someone",
+      "name": "unittest",
       "comment": "some comment",
-      "email": "joe@foo.bar",
-      "passphrase": "abc"
+      "email": "unittest@foo.bar",
+      "passphrase": "abc",
+      "homedir": ""
     }
   },
   "git": {

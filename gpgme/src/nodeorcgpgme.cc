@@ -1,6 +1,7 @@
 #include "nodeorcgpgme.h"
 #include "gpgmeasyncworker.h"
 #include <stdio.h>
+#include <string>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -8,6 +9,11 @@
 #include <unistd.h>
 
 using namespace v8;
+
+Gpgme::Gpgme(std::string homeDir) :
+  homeDir(homeDir)
+{
+}
 
 NODE_MODULE(gpgme, Gpgme::Init);
 
@@ -19,7 +25,6 @@ void Gpgme::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
   tpl->SetClassName(Nan::New<v8::String>("Gpgme").ToLocalChecked());
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-  // SetPrototypeMethod(tpl, "toString", toString);
   SetPrototypeMethod(tpl, "createDetachedSignature", CreateDetachedSignature);
   SetPrototypeMethod(tpl, "deleteKey", DeleteKey);
   SetPrototypeMethod(tpl, "exportKey", ExportKey);
@@ -31,7 +36,7 @@ void Gpgme::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
   module->Set(Nan::New("exports").ToLocalChecked(), tpl->GetFunction());
 }
 
-gpgme_ctx_t Gpgme::CreateContext()
+gpgme_ctx_t Gpgme::CreateContext(std::string homeDir)
 {
   gpg_error_t err;
   gpgme_engine_info_t enginfo;
@@ -46,7 +51,7 @@ gpgme_ctx_t Gpgme::CreateContext()
   err = gpgme_engine_check_version(GPGME_PROTOCOL_OpenPGP);
   if(gpg_err_code(err) != GPG_ERR_NO_ERROR) 
   {
-    Nan::ThrowError("OpenGPG is not supported on your plateform.");
+    Nan::ThrowError("OpenGPG is not supported on your platform.");
     return NULL;
   }
 
@@ -72,7 +77,13 @@ gpgme_ctx_t Gpgme::CreateContext()
     return NULL;
   }
 
-  err = gpgme_ctx_set_engine_info(context, GPGME_PROTOCOL_OpenPGP, enginfo->file_name, enginfo->home_dir);
+  const char* home_dir = enginfo->home_dir;
+  if (homeDir.length() > 0)
+  {
+    home_dir = homeDir.c_str();
+  }
+
+  err = gpgme_ctx_set_engine_info(context, GPGME_PROTOCOL_OpenPGP, enginfo->file_name, home_dir);
   if(gpg_err_code(err) != GPG_ERR_NO_ERROR) 
   {
     Nan::ThrowError("Cannot set engine info");
@@ -80,8 +91,6 @@ gpgme_ctx_t Gpgme::CreateContext()
   }
 
   gpgme_set_armor(context, 1);
-  //gpgme_set_textmode(context, 1);
-  gpgme_set_pinentry_mode(context, GPGME_PINENTRY_MODE_LOOPBACK);
 
   return context;
 }
@@ -90,9 +99,17 @@ NAN_METHOD(Gpgme::New)
 {
   Isolate* isolate = info.GetIsolate();
 
+  if (info.Length() != 1) 
+  {
+      Nan::ThrowTypeError("Wrong number of arguments");
+      return;
+  }
+
+  std::string homeDir(*v8::String::Utf8Value(info[0]->ToString()));
+
   if (info.IsConstructCall()) 
   {
-    Gpgme *gpgme = new Gpgme();
+    Gpgme *gpgme = new Gpgme(homeDir);
 
     gpgme->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
@@ -126,12 +143,14 @@ NAN_METHOD(Gpgme::GenerateKeys)
     return;
   }
 
+  Gpgme* gpgme = ObjectWrap::Unwrap<Gpgme>(info.This());
+  std::string homeDir = gpgme->homeDir;
   std::string keyGenParams (*v8::String::Utf8Value(info[0]->ToString()));
 
   Nan::Callback* thecallback = new Nan::Callback(info[1].As<Function>());
-  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyGenParams]() -> std::function<void(Nan::Callback*)> {
+  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyGenParams, homeDir]() -> std::function<void(Nan::Callback*)> {
     // This method is executed in another thread
-    auto context = Gpgme::CreateContext();
+    auto context = Gpgme::CreateContext(homeDir);
 
     gpg_error_t err;
     err = gpgme_op_genkey(context, keyGenParams.c_str(), NULL, NULL);
@@ -188,12 +207,14 @@ NAN_METHOD(Gpgme::ListKeys)
     return;
   }
 
+  Gpgme* gpgme = ObjectWrap::Unwrap<Gpgme>(info.This());
+  std::string homeDir = gpgme->homeDir;
   std::string keyListPattern (*v8::String::Utf8Value(info[0]->ToString()));
 
   Nan::Callback* thecallback = new Nan::Callback(info[1].As<Function>());
-  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyListPattern]() -> std::function<void(Nan::Callback*)> {
+  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyListPattern, homeDir]() -> std::function<void(Nan::Callback*)> {
     // This method is executed in another thread
-    auto context = Gpgme::CreateContext();
+    auto context = Gpgme::CreateContext(homeDir);
 
     gpgme_key_t key;
     gpgme_error_t err;
@@ -314,12 +335,14 @@ NAN_METHOD(Gpgme::ExportKey)
     return;
   }
 
+  Gpgme* gpgme = ObjectWrap::Unwrap<Gpgme>(info.This());
+  std::string homeDir = gpgme->homeDir;
   std::string keyFindPattern (*v8::String::Utf8Value(info[0]->ToString()));
 
   Nan::Callback* thecallback = new Nan::Callback(info[1].As<Function>());
-  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFindPattern]() -> std::function<void(Nan::Callback*)> {
+  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFindPattern, homeDir]() -> std::function<void(Nan::Callback*)> {
     // This method is executed in another thread
-    auto context = Gpgme::CreateContext();
+    auto context = Gpgme::CreateContext(homeDir);
 
     gpgme_data_t data;
     ssize_t dataSize;
@@ -418,13 +441,15 @@ NAN_METHOD(Gpgme::DeleteKey)
     return;
   }
   
+  Gpgme* gpgme = ObjectWrap::Unwrap<Gpgme>(info.This());
+  std::string homeDir = gpgme->homeDir;
   std::string keyFingerprint (*v8::String::Utf8Value(info[0]->ToString()));
   std::string passphrase (*v8::String::Utf8Value(info[1]->ToString()));
   
   Nan::Callback* thecallback = new Nan::Callback(info[2].As<Function>());
-  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFingerprint, passphrase]() -> std::function<void(Nan::Callback*)> {
+  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFingerprint, passphrase, homeDir]() -> std::function<void(Nan::Callback*)> {
     // This method is executed in another thread
-    auto context = Gpgme::CreateContext();
+    auto context = Gpgme::CreateContext(homeDir);
     
     bool keyDeleted = false;
     gpgme_key_t key;
@@ -498,15 +523,17 @@ NAN_METHOD(Gpgme::CreateDetachedSignature)
     return;
   }
 
+  Gpgme* gpgme = ObjectWrap::Unwrap<Gpgme>(info.This());
+  std::string homeDir = gpgme->homeDir;
   std::string keyFingerprint (*v8::String::Utf8Value(info[0]->ToString()));
   std::string passphrase (*v8::String::Utf8Value(info[1]->ToString()));
   std::string fileToSignFileName (*v8::String::Utf8Value(info[2]->ToString()));
   std::string signResultFileName (*v8::String::Utf8Value(info[3]->ToString()));
   
   Nan::Callback* thecallback = new Nan::Callback(info[4].As<Function>());
-  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFingerprint, passphrase, fileToSignFileName, signResultFileName]() -> std::function<void(Nan::Callback*)> {
+  GpgmeAsyncWorker* worker = new GpgmeAsyncWorker(thecallback, [keyFingerprint, passphrase, fileToSignFileName, signResultFileName, homeDir]() -> std::function<void(Nan::Callback*)> {
     // This method is executed in another thread
-    auto context = Gpgme::CreateContext();
+    auto context = Gpgme::CreateContext(homeDir);
 
     gpgme_key_t key;
     gpgme_data_t in;
@@ -608,6 +635,7 @@ NAN_METHOD(Gpgme::CreateDetachedSignature)
     }
 
     err = gpgme_op_sign(context, in, out, GPGME_SIG_MODE_DETACH);
+    int d = gpg_err_code(err);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR) 
     {
       Nan::ThrowError("Cannot sign file");

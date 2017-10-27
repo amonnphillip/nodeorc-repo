@@ -15,31 +15,21 @@
 using namespace Nan;
 
 class Gpgme : public ObjectWrap {
+public:
+  Gpgme(std::string homeDir);
+  static Nan::Persistent<v8::Function> constructor;
+  static void Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module);
 
  private:
-
-  static gpgme_ctx_t CreateContext();
-  // char* getVersion();
-  // bool addKey(char *key, int length, std::string& fingerprint);
-  // bool getKeys(std::list<gpgme_key_t> *keys);
-  // char *cipherPayload(v8::Local<v8::String> fpr, v8::Local<v8::String> msg);
-  // char *StringToCharPointer(v8::Local<v8::String> str);
-  // bool generateKeys(v8::Local<v8::String> str);
-
+  static gpgme_ctx_t CreateContext(std::string homeDir);
   static NAN_METHOD(New);
-  // static NAN_METHOD(toString);
   static NAN_METHOD(CreateDetachedSignature);
   static NAN_METHOD(ListKeys);
   static NAN_METHOD(ExportKey);
   static NAN_METHOD(DeleteKey);
-  // static NAN_METHOD(cipher);
   static NAN_METHOD(GenerateKeys);
 
- public:
-  static Nan::Persistent<v8::Function> constructor;
-
-  //static NAN_MODULE_INIT(Init);
-  static void Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module);
+  std::string homeDir;
 };
 
 #endif

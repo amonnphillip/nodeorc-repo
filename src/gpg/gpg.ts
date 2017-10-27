@@ -1,19 +1,20 @@
 import { Config } from '../config/config';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as moment from 'moment';
-//import * as gpgme from '../../gpgme/build/Debug/gpgme';
 
 const gpgme = require('../../gpgme/build/Debug/gpgme.node');
 
 export class Gpg {
-  private gpgUser: 'NodeOrc';
-  private destinationPath: string;
   private gpgmeInstance: any;
   constructor(private config: Config) {
-    this.destinationPath = path.resolve('./gpg/');
-
-    this.gpgmeInstance = new gpgme();
+    let gpgPath = '';
+    if (this.config.configSettings.key.keyConfig.homedir !== '') {
+      gpgPath = path.resolve(this.config.configSettings.key.keyConfig.homedir);
+      fs.ensureDirSync(gpgPath);
+      fs.chmodSync(gpgPath, '700');
+    }
+    this.gpgmeInstance = new gpgme(gpgPath);
   }
   generateKeyParams(): string {
     let keyGenParams = fs.readFileSync(path.resolve('./gpg/gpgkeyparams.txt'), 'utf8');
@@ -48,30 +49,16 @@ export class Gpg {
       });
     });
   }
-  async createKeys() {
-    if (!await this.keyExist()) {
-      return new Promise((resolve, reject) => {
-        this.gpgmeInstance.generateKeys(this.generateKeyParams(), (result) => {
-          if (typeof result === 'object') {
-            resolve(result);
-          } else {
-            reject();
-          }
-        });
+  async createKeys(): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.gpgmeInstance.generateKeys(this.generateKeyParams(), (result) => {
+        if (typeof result === 'object') {
+          resolve(result);
+        } else {
+          reject();
+        }
       });
-    }
-
-    return Promise.resolve();
-/*
-    const exportedKey = this.exportKey();
-    if (typeof exportedKey !== 'undefined') {
-      // const publicKey = this.gpgmeInstance.exportKey(key.fingerprint);
-      console.log();
-    }*/
-/*
-    if (!this.keyExist()) {
-      this.gpgmeInstance.generateKeys(this.generateKeyParams());
-    }*/
+    });
   }
   async exportKey(): Promise<boolean | {}> {
     const key = await this.getOldestKey();
@@ -94,9 +81,11 @@ export class Gpg {
     const key = await this.getOldestKey();
     if (typeof key !== 'undefined') {
       return new Promise((resolve, reject) => {
-        this.gpgmeInstance.createDetachedSignature(key.fingerprint, 'abc', imageFileName, signatureFileName, (result) => {
-          if (typeof result === 'string' &&
-            result.length > 0) {
+        this.gpgmeInstance.createDetachedSignature(key.fingerprint,
+          this.config.configSettings.key.keyConfig.passphrase,
+          imageFileName,
+          signatureFileName, (result) => {
+          if (result) {
             resolve(true);
           } else {
             reject(false);

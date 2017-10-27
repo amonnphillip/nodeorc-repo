@@ -17,6 +17,7 @@ export class ConfigObject {
       readonly comment: string,
       readonly email: string,
       readonly passphrase: string,
+      readonly homedir: string,
     }
   };
   public readonly  git: {

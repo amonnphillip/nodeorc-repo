@@ -17,7 +17,8 @@
       "name": "someone",
       "comment": "some comment",
       "email": "joe@foo.bar",
-      "passphrase": "abc"
+      "passphrase": "abc",
+      "homedir": ""
     }
   },
   "git": {
